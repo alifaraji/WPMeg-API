@@ -14,7 +14,6 @@ License URI:  https://www.gnu.org/licenses/gpl-2.0.html
 
 add_action( 'admin_menu', 'wpmeg_admin_menu' );
 
-
 function wpmeg_admin_menu() {
   add_menu_page( 'مخزن فارسی وردپرس', 'مخزن وردپرس', 'manage_options', 'wpmeg', 'wpmeg_admin_page', plugin_dir_url(__FILE__) . 'images/wpmeg.png', 6  );
 }
@@ -99,7 +98,7 @@ function wpmeg_admin_page(){
 function wpmeg_unzip($type, $res_title, $res_download, $res_support) {  // تایید و آنزیپ کردن فایل درخواستی
     $filesdir = ($type == 'plugin') ? ABSPATH.'wp-content/plugins' : get_theme_root(); // محل پوشه های قالب و افزونه براساس درخواست
     $url = 'https://www.wpmeg.com/download/'.$res_download; // لینک دانلود درخواستی
-    $zipFile = "demo/wp-content/test/wpmeg.zip"; // فایل زیپ موقتی که در پایان عملیات حذف خواهد شد
+    $zipFile = $filesdir.'/wpmeg.zip'; // فایل زیپ موقتی که در پایان عملیات حذف خواهد شد
 
     $zipResource = fopen($zipFile, "w");
 
