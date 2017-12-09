@@ -3,14 +3,12 @@
 Plugin Name:  مخزن فارسی وردپرس
 Plugin URI:   https://wpmeg.com
 Description:  افزونه ای برای نصب مستقیم قالب و افزونه از وبسایت WPMeg.com
-Version:      1
+Version:      1.0.0
 Author:       علی فرجی
 Author URI:   https://wpmeg.com/author/ali
 License:      GPL2
 License URI:  https://www.gnu.org/licenses/gpl-2.0.html
 */
-
-//include( plugin_dir_path( __FILE__ ) . 'library/zipadmin.php');
 
 add_action( 'admin_menu', 'wpmeg_admin_menu' );
 
@@ -19,16 +17,22 @@ function wpmeg_admin_menu() {
 }
 
 function wpmeg_admin_page(){
-  $api = $_POST['wpmeg_api'];
 
-  if(!empty($_POST['submit'])) {
-    update_option('wpmeg_api', $api);
+
+  $get_api = $_POST['wpmeg_api'];
+  $submit_api = $_POST['submit'];
+  $mode = $_GET['mode'];
+  $fileid = $_GET['file'];
+  $confirm = $_GET['confirm'];
+
+  if(!empty($submit_api)) {
+    update_option('wpmeg_api', $get_api);
   }
 
 	?>
 	<div class="wrap">
 		<h2>دانلود قالب و افزونه از WPMeg.com</h2>
-    <?php if(!isset($_GET['mode'])) {  ?>
+    <?php if(!isset($mode)) {  ?>
   <form action="<?php echo esc_url( admin_url('admin.php?page=wpmeg') ); ?>" method="post">
     <table class="form-table">
       <tbody>
@@ -51,9 +55,7 @@ function wpmeg_admin_page(){
 }
 
   $api = get_option('wpmeg_api');
-  $mode = $_GET['mode'];
-  $fileid = $_GET['file'];
-  $confirm = $_GET['confirm'];
+
 
   $jsondata = file_get_contents('https://wpmeg.com/api.php?file='.$fileid.'&api='.$api.'&url='.get_site_url());
   $response = json_decode($jsondata, true);
@@ -98,7 +100,7 @@ function wpmeg_admin_page(){
 function wpmeg_unzip($type, $res_title, $res_download, $res_support) {  // تایید و آنزیپ کردن فایل درخواستی
     $filesdir = ($type == 'plugin') ? ABSPATH.'wp-content/plugins' : get_theme_root(); // محل پوشه های قالب و افزونه براساس درخواست
     $url = 'https://www.wpmeg.com/download/'.$res_download; // لینک دانلود درخواستی
-    $zipFile = $filesdir.'/wpmeg.zip'; // فایل زیپ موقتی که در پایان عملیات حذف خواهد شد
+    $zipFile = $filesdir.'/wpmeg_temp.zip'; // فایل زیپ موقتی که در پایان عملیات حذف خواهد شد WPMeg Temporary Zip File
 
     $zipResource = fopen($zipFile, "w");
 
@@ -138,7 +140,7 @@ function wpmeg_unzip($type, $res_title, $res_download, $res_support) {  // تا�
       }
 
     $pathlist = array();
-
+    $foldercount = array();
 
       $i = 0;
       while ($info = $zip->statIndex($i)) {
@@ -152,7 +154,7 @@ function wpmeg_unzip($type, $res_title, $res_download, $res_support) {  // تا�
         $is_istandard = count(array_unique($foldercount)); // کنترل اینکه روت فایل زیپ فقط شامل یک فولدر است (استاندارد وردپرس) و...
 
       if($is_single == 1 || $is_istandard > 1) {
-        wpmeg_error('notice-error', 'فایل مورد نظر معتبر نمی باشد. لطفا فایل را به مدیریت WPMeg.com گزارش دهید.');
+        wpmeg_error('notice-error', 'فایل مورد نظر معتبر نمی باشد. لطفا فایل را به مدیریت WPMeg.com گزارش دهید.'); // :(
         die();
       }
 
@@ -161,7 +163,7 @@ function wpmeg_unzip($type, $res_title, $res_download, $res_support) {  // تا�
         $dirs = array_filter(glob($filesdir.'/*'), 'is_dir');
         $files = array_map('basename', $dirs);
 
-        if (in_array($filename, $files)) {
+        if (in_array($filename, $files)) { // filename = نام فایل files = افزونه ویا قالب هایی که قبلا نصب شده اند
           if ($type == 'plugin') {
             wpmeg_error('notice-warning', 'اخطار: افزونه ای با همین نام در وردپرس این سایت نصب شده است، برای نصب، ابتدا باید آن را پاک کنید.');
           }
@@ -176,19 +178,17 @@ function wpmeg_unzip($type, $res_title, $res_download, $res_support) {  // تا�
     unlink($zipFile); // پاک کردن فایل زیپ موقتی
     if($type == 'plugin') {
       ?>
-      <div class="notice notice-success is-dismissible"><p>افزونه "<?php echo $res_title; ?>" با موفقیت بارگذاری شد. برای فعال سازی <a href="<?php echo admin_url(); ?>plugins.php?plugin_status=inactive">اینجا کلیک کنید.</a>
-      <br /> <br />
-      <a href="<?php echo $res_support; ?>" target="_new">پشتیبانی از این افزونه</a>
-      </p>
+      <div class="notice notice-success is-dismissible"><p>افزونه "<?php echo $res_title; ?>" با موفقیت نصب شد. برای فعال سازی <a href="<?php echo admin_url(); ?>plugins.php?plugin_status=inactive">اینجا کلیک کنید.</a>
+        <br /> <br /><a href="<?php echo $res_support; ?>" target="_new">پشتیبانی از این افزونه</a></p>
       </div>
       <?php
     }
+
     if($type == 'theme') {
       ?>
-      <div class="notice notice-success is-dismissible"><p>قالب "<?php echo $res_title; ?>" با موفقیت بارگذاری شد. برای فعال سازی <a href="<?php echo admin_url(); ?>themes.php">اینجا کلیک کنید.</a>
-      <a href="<?php echo $res_support; ?>" target="_new">پشتیبانی از این قالب</a>
-      </p></div>
-
+      <div class="notice notice-success is-dismissible"><p>قالب "<?php echo $res_title; ?>" با موفقیت نصب شد. برای فعال سازی <a href="<?php echo admin_url(); ?>themes.php">اینجا کلیک کنید.</a>
+        <br /><br /><a href="<?php echo $res_support; ?>" target="_new">پشتیبانی از این قالب</a></p>
+     </div>
       <?php
     }
 }
