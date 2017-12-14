@@ -32,7 +32,11 @@ function wpmeg_admin_page(){
 	?>
 	<div class="wrap">
 		<h2>دانلود قالب و افزونه از WPMeg.com</h2>
+
     <?php if(!isset($mode)) {  ?>
+
+  <p><strong><a href="https://wpmeg.com/api.php?mode=add_api" target="_new">دریافت کلید API</a> | </strong><strong><a href="https://wpmeg.com/plugin/wordpress_farsi_database/faq/1" target="_new">راهنمای راه اندازی واستفاده از API</a></strong></p>
+
   <form action="<?php echo esc_url( admin_url('admin.php?page=wpmeg') ); ?>" method="post">
     <table class="form-table">
       <tbody>
